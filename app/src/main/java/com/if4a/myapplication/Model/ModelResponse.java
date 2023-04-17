@@ -5,7 +5,7 @@ import java.util.List;
 public class ModelResponse {
     private String kode, pesan;
     private List<ModelKuliner> data;
-    
+
     public List<ModelKuliner> getData() {
         return data;
     }
