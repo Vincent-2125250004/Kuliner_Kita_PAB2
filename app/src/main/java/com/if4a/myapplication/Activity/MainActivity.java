@@ -1,16 +1,80 @@
 package com.if4a.myapplication.Activity;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.if4a.myapplication.API.APIRequestData;
+import com.if4a.myapplication.API.RetroServer;
+import com.if4a.myapplication.Adapter.AdapterKuliner;
+import com.if4a.myapplication.Model.ModelKuliner;
+import com.if4a.myapplication.Model.ModelResponse;
 import com.if4a.myapplication.R;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class MainActivity extends AppCompatActivity {
+    private RecyclerView rvKuliner;
+    private FloatingActionButton fabtambah;
+    private ProgressBar pbkuliner;
+    private RecyclerView.Adapter adKuliner;
+    private RecyclerView.LayoutManager lmKuliner;
+    private List<ModelKuliner> listKuliner = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        rvKuliner= findViewById(R.id.rv_kuliner);
+        fabtambah = findViewById(R.id.fab_tambah);
+        pbkuliner = findViewById(R.id.pb_kuliner);
+        lmKuliner = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
+        rvKuliner.setLayoutManager(lmKuliner);
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Retrievekuliner();
+    }
+
+    public void Retrievekuliner(){
+        pbkuliner.setVisibility(View.VISIBLE);
+        APIRequestData ard = RetroServer.konekRetrofit().create(APIRequestData.class);
+        Call<ModelResponse> proses = ard.ardRetrieve();
+
+        proses.enqueue(new Callback<ModelResponse>() {
+            @Override
+            public void onResponse(Call<ModelResponse> call, Response<ModelResponse> response) {
+                String kode = response.body().getKode();
+                String pesan = response.body().getPesan();
+                listKuliner = response.body().getData();
+
+                adKuliner = new AdapterKuliner(MainActivity.this, listKuliner);
+                rvKuliner.setAdapter(adKuliner);
+                adKuliner.notifyDataSetChanged();
+
+                pbkuliner.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onFailure(Call<ModelResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Gagal menghubungi Server", Toast.LENGTH_SHORT).show();
+                pbkuliner.setVisibility(View.GONE);
+            }
+        });
     }
 }
